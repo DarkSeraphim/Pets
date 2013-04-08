@@ -1,11 +1,13 @@
 package me.giinger.pets;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 
 public class Pet {
 
 	String petname;
 	Entity pet;
+	Location loc;
 
 	public String getPetName() {
 		return petname;
@@ -21,6 +23,14 @@ public class Pet {
 
 	public void setPet(Entity e) {
 		this.pet = e;
+	}
+
+	public Location getLocation() {
+		return loc;
+	}
+
+	public void setLocation(Location l) {
+		this.loc = l;
 	}
 
 }

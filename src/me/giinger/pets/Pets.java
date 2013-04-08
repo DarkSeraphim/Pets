@@ -8,6 +8,7 @@ public class Pets extends JavaPlugin {
 	Logger log = Logger.getLogger("Minecraft");
 
 	public void onEnable() {
+		getServer().getPluginManager().registerEvents(new PetsEvents(), this);
 		log.info("[MMORPG] Pets v1.0 Enabled!");
 	}
 

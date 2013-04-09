@@ -1,15 +1,20 @@
 package me.giinger.pets;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import net.minecraft.server.v1_5_R2.Packet63WorldParticles;
+
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -19,13 +24,14 @@ import org.bukkit.entity.Ocelot.Type;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import de.ntcomputer.minecraft.controllablemobs.api.ControllableMob;
 import de.ntcomputer.minecraft.controllablemobs.api.ControllableMobs;
 
 public class PetsAPI {
 
-	public static PetsAPI instance;
+	public static PetsAPI instance = new PetsAPI();
 
 	public Map<String, Pet> petlist = new HashMap<String, Pet>();
 
@@ -118,11 +124,14 @@ public class PetsAPI {
 
 	public void setupPet(Player p, EntityType entitytype) {
 		if (entitytype.equals(EntityType.ZOMBIE)) {
-			zombienaming.add(p.getName());
+			if (!zombienaming.contains(p.getName()))
+				zombienaming.add(p.getName());
 		} else if (entitytype.equals(EntityType.OCELOT)) {
-			ocelotnaming.add(p.getName());
+			if (!ocelotnaming.contains(p.getName()))
+				ocelotnaming.add(p.getName());
 		} else if (entitytype.equals(EntityType.MUSHROOM_COW)) {
-			mooshroomnaming.add(p.getName());
+			if (!mooshroomnaming.contains(p.getName()))
+				mooshroomnaming.add(p.getName());
 		}
 		p.sendMessage(ChatColor.YELLOW
 				+ "What would you like to name your pet?");
@@ -176,22 +185,40 @@ public class PetsAPI {
 		petocelots.put(player, controlledOcelot);
 	}
 
-	public void spawnMooshroomPet(Location location, Player player) {
-		MushroomCow mooshroom = location.getWorld().spawn(location,
+	public void spawnMooshroomPet(Location location, final Player player) {
+		final MushroomCow mooshroom = location.getWorld().spawn(location,
 				MushroomCow.class);
-		ControllableMob<MushroomCow> controlledOcelot = ControllableMobs
+		ControllableMob<MushroomCow> controlledMooshroom = ControllableMobs
 				.assign(mooshroom, true);
 		setPet(player, mooshroom);
-		controlledOcelot.getProperties().setMovementSpeed(0.35F);
-		controlledOcelot.getActions().follow(player, true, 2, 1);
-		controlledOcelot.getActions().lookAt(player);
-		controlledOcelot.getEntity().setBaby();
-		controlledOcelot.getEntity().setAgeLock(true);
-		controlledOcelot.getEntity().setCanPickupItems(false);
-		controlledOcelot.getEntity().setCustomName(pet.getPetName());
-		controlledOcelot.getEntity().setCustomNameVisible(true);
+		controlledMooshroom.getProperties().setMovementSpeed(0.35F);
+		controlledMooshroom.getActions().follow(player, false, 2, 1);
+		controlledMooshroom.getActions().lookAt(player);
+		controlledMooshroom.getEntity().setBaby();
+		controlledMooshroom.getEntity().setAgeLock(true);
+		controlledMooshroom.getEntity().setCanPickupItems(false);
+		controlledMooshroom.getEntity().setCustomName(pet.getPetName());
+		controlledMooshroom.getEntity().setCustomNameVisible(true);
+		final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(
+				Pets.instance, new BukkitRunnable() {
+					@Override
+					public void run() {
+						createEffect((CraftPlayer) player, "happyVillager",
+								(float) mooshroom.getLocation().getX(),
+								(float) (mooshroom.getLocation().getY() + 1.5),
+								(float) mooshroom.getLocation().getZ(), 0F, 0F,
+								0F, 0F, 20);
+					}
+				}, 0L, 5L);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(Pets.instance,
+				new BukkitRunnable() {
+					@Override
+					public void run() {
+						Bukkit.getScheduler().cancelTask(task);
+					}
+				}, 120L);
 		doSmoke(location);
-		petmooshrooms.put(player, controlledOcelot);
+		petmooshrooms.put(player, controlledMooshroom);
 	}
 
 	public void doSmoke(Location location) {
@@ -199,5 +226,55 @@ public class PetsAPI {
 		location.getWorld().playEffect(location, Effect.SMOKE, 2);
 		location.getWorld().playEffect(location, Effect.SMOKE, 6);
 		location.getWorld().playEffect(location, Effect.SMOKE, 8);
+	}
+
+	public void createEffect(CraftPlayer player, String nameOfEffect,
+			float playersX, float playersY, float playersZ, float xOffset,
+			float yOffset, float zOffset, float effectSpeed,
+			int amountOfParticles) {
+		// Make an instance of the packet!
+		Packet63WorldParticles sPacket = new Packet63WorldParticles();
+		for (Field field : sPacket.getClass().getDeclaredFields()) {
+			try {
+				// Get those fields we need to be accessible!
+				field.setAccessible(true);
+				String fieldName = field.getName();
+				// Set them to what we want!
+				switch (fieldName) {
+				case "a":
+					field.set(sPacket, nameOfEffect);
+					break;
+				case "b":
+					field.setFloat(sPacket, playersX);
+					break;
+				case "c":
+					field.setFloat(sPacket, playersY);
+					break;
+				case "d":
+					field.setFloat(sPacket, playersZ);
+					break;
+				case "e":
+					field.setFloat(sPacket, xOffset);
+					break;
+				case "f":
+					field.setFloat(sPacket, yOffset);
+					break;
+				case "g":
+					field.setFloat(sPacket, zOffset);
+					break;
+				case "h":
+					field.setFloat(sPacket, effectSpeed);
+					break;
+				case "i":
+					field.setInt(sPacket, amountOfParticles);
+					break;
+				}
+			} catch (Exception e) {
+				player.sendMessage("Something went wrong....");
+				System.out.println(e.getMessage());
+			}
+		}
+		for (Player p : Bukkit.getOnlinePlayers())
+			((CraftPlayer) p).getHandle().playerConnection.sendPacket(sPacket);
 	}
 }

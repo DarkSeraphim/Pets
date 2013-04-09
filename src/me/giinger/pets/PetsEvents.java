@@ -18,7 +18,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class PetsEvents implements Listener {
 
-	PetsAPI api = new PetsAPI();
+	PetsAPI api = PetsAPI.instance;
 	Pet pet;
 
 	@EventHandler
@@ -76,6 +76,7 @@ public class PetsEvents implements Listener {
 							api.spawnZombiePet(e.getClickedBlock()
 									.getLocation().add(0, 1, 0), p);
 						} else {
+							System.out.println(api.hasName(p));
 							api.setPetLoc(p, e.getClickedBlock().getLocation()
 									.add(0, 1, 0));
 							api.setupPet(p, EntityType.ZOMBIE);

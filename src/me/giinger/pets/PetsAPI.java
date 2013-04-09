@@ -4,18 +4,37 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.MushroomCow;
+import org.bukkit.entity.Ocelot;
+import org.bukkit.entity.Ocelot.Type;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
+import org.bukkit.inventory.ItemStack;
+
+import de.ntcomputer.minecraft.controllablemobs.api.ControllableMob;
+import de.ntcomputer.minecraft.controllablemobs.api.ControllableMobs;
 
 public class PetsAPI {
 
 	public static Map<String, Pet> petlist = new HashMap<String, Pet>();
-	public static List<String> naming = new ArrayList<String>();
+
+	public static Map<Entity, ControllableMob<Zombie>> petzombies;
+	public static Map<Entity, ControllableMob<Ocelot>> petocelots;
+	public static Map<Entity, ControllableMob<MushroomCow>> petmooshrooms;
+
+	public static List<String> zombienaming = new ArrayList<String>();
+	public static List<String> ocelotnaming = new ArrayList<String>();
+	public static List<String> mooshroomnaming = new ArrayList<String>();
+
 	private Pet pet;
 
 	public Entity getPet(Player player) {
@@ -62,6 +81,28 @@ public class PetsAPI {
 			return true;
 	}
 
+	public void killPet(Player player) {
+		pet = petlist.get(player.getName());
+		((LivingEntity) pet.getPet()).setHealth(1);
+		((LivingEntity) pet.getPet()).damage(1);
+		pet.setPet(null);
+	}
+
+	public static void killAllPets() {
+		for (ControllableMob<Zombie> controlledZombie : PetsAPI.petzombies
+				.values()) {
+			controlledZombie.getActions().die();
+		}
+		for (ControllableMob<Ocelot> controlledOcelot : PetsAPI.petocelots
+				.values()) {
+			controlledOcelot.getActions().die();
+		}
+		for (ControllableMob<MushroomCow> controlledMooshroom : PetsAPI.petmooshrooms
+				.values()) {
+			controlledMooshroom.getActions().die();
+		}
+	}
+
 	/**
 	 * 
 	 * @return true if their pet has a name
@@ -73,28 +114,88 @@ public class PetsAPI {
 			return true;
 	}
 
-	public void setupPet(Player p) {
-		naming.add(p.getName());
+	public void setupPet(Player p, EntityType entitytype) {
+		if (entitytype.equals(EntityType.ZOMBIE)) {
+			zombienaming.add(p.getName());
+		} else if (entitytype.equals(EntityType.OCELOT)) {
+			ocelotnaming.add(p.getName());
+		} else if (entitytype.equals(EntityType.MUSHROOM_COW)) {
+			mooshroomnaming.add(p.getName());
+		}
 		p.sendMessage(ChatColor.YELLOW
 				+ "What would you like to name your pet?");
 	}
 
-	public void spawnZombiePet(Location location, Player p) {
-		location = new Location(location.getWorld(), location.getX(),
-				location.getY() + 1, location.getZ());
-		pet = petlist.get(p.getName());
-		Zombie e = (Zombie) p.getWorld().spawn(location, Zombie.class);
-		pet.setPet((Entity) e);
-		System.out.println(e);
-		e.setBaby(true);
-		e.setVillager(true);
-		e.setCanPickupItems(false);
-		e.setCustomName(pet.getPetName());
-		e.setCustomNameVisible(true);
-		e.setTarget(p);
-		p.playEffect(location, Effect.SMOKE, 0);
-		p.playEffect(location, Effect.SMOKE, 2);
-		p.playEffect(location, Effect.SMOKE, 6);
-		p.playEffect(location, Effect.SMOKE, 8);
+	public void spawnZombiePet(Location location, Player player) {
+		Zombie zombie = location.getWorld().spawn(location, Zombie.class);
+		ControllableMob<Zombie> controlledZombie = ControllableMobs.assign(
+				zombie, true);
+		setPet(player, zombie);
+		controlledZombie.getActions().follow(player, false, 2, 1);
+		controlledZombie.getActions().lookAt(player);
+		controlledZombie.getEntity().getEquipment()
+				.setHelmet(new ItemStack(Material.DIAMOND_HELMET));
+		controlledZombie.getEntity().setBaby(true);
+		controlledZombie.getEntity().setVillager(true);
+		controlledZombie.getEntity().setCanPickupItems(false);
+		controlledZombie.getEntity().setCustomName(pet.getPetName());
+		controlledZombie.getEntity().setCustomNameVisible(true);
+		doSmoke(location);
+		petzombies.put(player, controlledZombie);
+	}
+
+	public void spawnOcelotPet(Location location, Player player) {
+		Ocelot ocelot = location.getWorld().spawn(location, Ocelot.class);
+		ControllableMob<Ocelot> controlledOcelot = ControllableMobs.assign(
+				ocelot, true);
+		setPet(player, ocelot);
+		controlledOcelot.getEntity().setTamed(true);
+		controlledOcelot.getEntity().setOwner(player);
+		controlledOcelot.getProperties().setMovementSpeed(0.35F);
+		controlledOcelot.getActions().follow(player, true, 2, 1);
+		controlledOcelot.getActions().lookAt(player);
+		Random gen = new Random();
+		int x = gen.nextInt(4);
+		if (x == 1) {
+			controlledOcelot.getEntity().setCatType(Type.BLACK_CAT);
+		} else if (x == 2) {
+			controlledOcelot.getEntity().setCatType(Type.RED_CAT);
+		} else if (x == 3) {
+			controlledOcelot.getEntity().setCatType(Type.SIAMESE_CAT);
+		} else if (x == 4) {
+			controlledOcelot.getEntity().setCatType(Type.WILD_OCELOT);
+		}
+		controlledOcelot.getEntity().setBaby();
+		controlledOcelot.getEntity().setAgeLock(true);
+		controlledOcelot.getEntity().setCanPickupItems(false);
+		controlledOcelot.getEntity().setCustomName(pet.getPetName());
+		controlledOcelot.getEntity().setCustomNameVisible(true);
+		doSmoke(location);
+		petocelots.put(player, controlledOcelot);
+	}
+
+	public void spawnMooshroomPet(Location location, Player player) {
+		MushroomCow mooshroom = location.getWorld().spawn(location,
+				MushroomCow.class);
+		ControllableMob<MushroomCow> controlledOcelot = ControllableMobs
+				.assign(mooshroom, true);
+		setPet(player, mooshroom);
+		controlledOcelot.getProperties().setMovementSpeed(0.35F);
+		controlledOcelot.getActions().follow(player, true, 2, 1);
+		controlledOcelot.getActions().lookAt(player);
+		controlledOcelot.getEntity().setBaby();
+		controlledOcelot.getEntity().setAgeLock(true);
+		controlledOcelot.getEntity().setCanPickupItems(false);
+		controlledOcelot.getEntity().setCustomName(pet.getPetName());
+		controlledOcelot.getEntity().setCustomNameVisible(true);
+		doSmoke(location);
+		petmooshrooms.put(player, controlledOcelot);
+	}
+
+	public void doSmoke(Location location) {
+		location.getWorld().playEffect(location, Effect.SMOKE, 0);
+		location.getWorld().playEffect(location, Effect.SMOKE, 2);
+		location.getWorld().playEffect(location, Effect.SMOKE, 6);
+		location.getWorld().playEffect(location, Effect.SMOKE, 8);
 	}
 }

@@ -25,15 +25,17 @@ import de.ntcomputer.minecraft.controllablemobs.api.ControllableMobs;
 
 public class PetsAPI {
 
-	public static Map<String, Pet> petlist = new HashMap<String, Pet>();
+	public static PetsAPI instance;
 
-	public static Map<Entity, ControllableMob<Zombie>> petzombies;
-	public static Map<Entity, ControllableMob<Ocelot>> petocelots;
-	public static Map<Entity, ControllableMob<MushroomCow>> petmooshrooms;
+	public Map<String, Pet> petlist = new HashMap<String, Pet>();
 
-	public static List<String> zombienaming = new ArrayList<String>();
-	public static List<String> ocelotnaming = new ArrayList<String>();
-	public static List<String> mooshroomnaming = new ArrayList<String>();
+	public Map<Entity, ControllableMob<Zombie>> petzombies;
+	public Map<Entity, ControllableMob<Ocelot>> petocelots;
+	public Map<Entity, ControllableMob<MushroomCow>> petmooshrooms;
+
+	public List<String> zombienaming = new ArrayList<String>();
+	public List<String> ocelotnaming = new ArrayList<String>();
+	public List<String> mooshroomnaming = new ArrayList<String>();
 
 	private Pet pet;
 
@@ -89,15 +91,15 @@ public class PetsAPI {
 	}
 
 	public static void killAllPets() {
-		for (ControllableMob<Zombie> controlledZombie : PetsAPI.petzombies
+		for (ControllableMob<Zombie> controlledZombie : instance.petzombies
 				.values()) {
 			controlledZombie.getActions().die();
 		}
-		for (ControllableMob<Ocelot> controlledOcelot : PetsAPI.petocelots
+		for (ControllableMob<Ocelot> controlledOcelot : instance.petocelots
 				.values()) {
 			controlledOcelot.getActions().die();
 		}
-		for (ControllableMob<MushroomCow> controlledMooshroom : PetsAPI.petmooshrooms
+		for (ControllableMob<MushroomCow> controlledMooshroom : instance.petmooshrooms
 				.values()) {
 			controlledMooshroom.getActions().die();
 		}

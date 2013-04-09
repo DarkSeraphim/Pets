@@ -24,13 +24,13 @@ public class PetsEvents implements Listener {
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		Player p = e.getPlayer();
-		PetsAPI.petlist.put(p.getName(), new Pet());
+		PetsAPI.instance.petlist.put(p.getName(), new Pet());
 	}
 
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent e) {
 		Player p = e.getPlayer();
-		PetsAPI.petlist.remove(p.getName());
+		PetsAPI.instance.petlist.remove(p.getName());
 	}
 
 	@EventHandler
@@ -38,21 +38,21 @@ public class PetsEvents implements Listener {
 		String msg = e.getMessage();
 		Player p = e.getPlayer();
 
-		if (PetsAPI.zombienaming.contains(p.getName())) {
+		if (PetsAPI.instance.zombienaming.contains(p.getName())) {
 			e.setCancelled(true);
 			api.setPetName(p, msg);
 			api.spawnZombiePet(api.getPetLoc(p), p);
-			PetsAPI.zombienaming.remove(p.getName());
-		} else if (PetsAPI.ocelotnaming.contains(p.getName())) {
+			PetsAPI.instance.zombienaming.remove(p.getName());
+		} else if (PetsAPI.instance.ocelotnaming.contains(p.getName())) {
 			e.setCancelled(true);
 			api.setPetName(p, msg);
 			api.spawnOcelotPet(api.getPetLoc(p), p);
-			PetsAPI.ocelotnaming.remove(p.getName());
-		} else if (PetsAPI.mooshroomnaming.contains(p.getName())) {
+			PetsAPI.instance.ocelotnaming.remove(p.getName());
+		} else if (PetsAPI.instance.mooshroomnaming.contains(p.getName())) {
 			e.setCancelled(true);
 			api.setPetName(p, msg);
 			api.spawnMooshroomPet(api.getPetLoc(p), p);
-			PetsAPI.mooshroomnaming.remove(p.getName());
+			PetsAPI.instance.mooshroomnaming.remove(p.getName());
 		}
 	}
 
@@ -70,7 +70,7 @@ public class PetsEvents implements Listener {
 							api.killPet(p);
 							return;
 						}
-						PetsAPI.petlist.put(p.getName(), new Pet());
+						PetsAPI.instance.petlist.put(p.getName(), new Pet());
 						if (api.hasName(p)) {
 							e.setCancelled(true);
 							api.spawnZombiePet(e.getClickedBlock()
@@ -87,7 +87,7 @@ public class PetsEvents implements Listener {
 							api.killPet(p);
 							return;
 						}
-						PetsAPI.petlist.put(p.getName(), new Pet());
+						PetsAPI.instance.petlist.put(p.getName(), new Pet());
 						if (api.hasName(p)) {
 							e.setCancelled(true);
 							api.spawnOcelotPet(e.getClickedBlock()
@@ -104,7 +104,7 @@ public class PetsEvents implements Listener {
 							api.killPet(p);
 							return;
 						}
-						PetsAPI.petlist.put(p.getName(), new Pet());
+						PetsAPI.instance.petlist.put(p.getName(), new Pet());
 						if (api.hasName(p)) {
 							e.setCancelled(true);
 							api.spawnMooshroomPet(e.getClickedBlock()
@@ -143,7 +143,8 @@ public class PetsEvents implements Listener {
 	public void onEntityDamage(EntityDamageEvent e) {
 		Entity entity = e.getEntity();
 		for (Player player : Bukkit.getOnlinePlayers()) {
-			if (entity == PetsAPI.petlist.get(player.getName()).getPet()) {
+			if (entity == PetsAPI.instance.petlist.get(player.getName())
+					.getPet()) {
 				e.setCancelled(true);
 			}
 		}

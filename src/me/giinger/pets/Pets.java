@@ -19,14 +19,14 @@ public class Pets extends JavaPlugin {
 	public static Pets instance = new Pets();
 
 	public void onEnable() {
-		PetsAPI.petzombies = new HashMap<Entity, ControllableMob<Zombie>>();
-		PetsAPI.petocelots = new HashMap<Entity, ControllableMob<Ocelot>>();
-		PetsAPI.petmooshrooms = new HashMap<Entity, ControllableMob<MushroomCow>>();
+		PetsAPI.instance.petzombies = new HashMap<Entity, ControllableMob<Zombie>>();
+		PetsAPI.instance.petocelots = new HashMap<Entity, ControllableMob<Ocelot>>();
+		PetsAPI.instance.petmooshrooms = new HashMap<Entity, ControllableMob<MushroomCow>>();
 		getServer().getPluginManager().registerEvents(new PetsEvents(), this);
 		log.info("[MMORPG] Pets v1.0 Enabled!");
 
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			PetsAPI.petlist.put(p.getName(), new Pet());
+			PetsAPI.instance.petlist.put(p.getName(), new Pet());
 		}
 	}
 

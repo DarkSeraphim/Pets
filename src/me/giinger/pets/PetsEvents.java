@@ -30,7 +30,7 @@ public class PetsEvents implements Listener {
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent e) {
 		Player p = e.getPlayer();
-		PetsAPI.instance.petlist.remove(p.getName());
+		api.killPet(p);
 	}
 
 	@EventHandler

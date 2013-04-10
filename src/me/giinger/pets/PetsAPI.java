@@ -1,20 +1,19 @@
 package me.giinger.pets;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.server.v1_5_R2.Packet63WorldParticles;
+import me.giinger.particleapi.ParticleAPI;
+import me.giinger.particleapi.ParticleType;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -32,8 +31,10 @@ import de.ntcomputer.minecraft.controllablemobs.api.ControllableMobs;
 public class PetsAPI {
 
 	public static PetsAPI instance = new PetsAPI();
+	public static ParticleAPI particleapi = new ParticleAPI();
 
 	public Map<String, Pet> petlist = new HashMap<String, Pet>();
+	public static Map<Player, Integer> particles = new HashMap<Player, Integer>();
 
 	public Map<Entity, ControllableMob<Zombie>> petzombies;
 	public Map<Entity, ControllableMob<Ocelot>> petocelots;
@@ -94,6 +95,8 @@ public class PetsAPI {
 		((LivingEntity) pet.getPet()).setHealth(1);
 		((LivingEntity) pet.getPet()).damage(1);
 		pet.setPet(null);
+		for (Player p : Bukkit.getOnlinePlayers())
+			stopParticles(p);
 	}
 
 	public static void killAllPets() {
@@ -109,6 +112,8 @@ public class PetsAPI {
 				.values()) {
 			controlledMooshroom.getActions().die();
 		}
+		for (Player p : Bukkit.getOnlinePlayers())
+			stopParticles(p);
 	}
 
 	/**
@@ -199,26 +204,25 @@ public class PetsAPI {
 		controlledMooshroom.getEntity().setCanPickupItems(false);
 		controlledMooshroom.getEntity().setCustomName(pet.getPetName());
 		controlledMooshroom.getEntity().setCustomNameVisible(true);
-		final int task = Bukkit.getScheduler().scheduleSyncRepeatingTask(
-				Pets.instance, new BukkitRunnable() {
-					@Override
-					public void run() {
-						createEffect((CraftPlayer) player, "happyVillager",
-								(float) mooshroom.getLocation().getX(),
-								(float) (mooshroom.getLocation().getY() + 1.5),
-								(float) mooshroom.getLocation().getZ(), 0F, 0F,
-								0F, 0F, 20);
-					}
-				}, 0L, 5L);
-		Bukkit.getScheduler().scheduleSyncDelayedTask(Pets.instance,
-				new BukkitRunnable() {
-					@Override
-					public void run() {
-						Bukkit.getScheduler().cancelTask(task);
-					}
-				}, 120L);
 		doSmoke(location);
 		petmooshrooms.put(player, controlledMooshroom);
+		int task = 0;
+		for (final Player p : Bukkit.getOnlinePlayers())
+			task = Bukkit.getScheduler().scheduleSyncRepeatingTask(
+					Pets.instance, new BukkitRunnable() {
+						@Override
+						public void run() {
+							particleapi.sendParticle(ParticleType.HEART, p,
+									mooshroom.getLocation(), 0.5F, 0.5F, 0.5F,
+									0.2F, 2);
+						}
+					}, 0L, 5L);
+		particles.put(player, task);
+	}
+
+	public static void stopParticles(Player player) {
+		int task = particles.get(player);
+		Bukkit.getScheduler().cancelTask(task);
 	}
 
 	public void doSmoke(Location location) {
@@ -226,55 +230,5 @@ public class PetsAPI {
 		location.getWorld().playEffect(location, Effect.SMOKE, 2);
 		location.getWorld().playEffect(location, Effect.SMOKE, 6);
 		location.getWorld().playEffect(location, Effect.SMOKE, 8);
-	}
-
-	public void createEffect(CraftPlayer player, String nameOfEffect,
-			float playersX, float playersY, float playersZ, float xOffset,
-			float yOffset, float zOffset, float effectSpeed,
-			int amountOfParticles) {
-		// Make an instance of the packet!
-		Packet63WorldParticles sPacket = new Packet63WorldParticles();
-		for (Field field : sPacket.getClass().getDeclaredFields()) {
-			try {
-				// Get those fields we need to be accessible!
-				field.setAccessible(true);
-				String fieldName = field.getName();
-				// Set them to what we want!
-				switch (fieldName) {
-				case "a":
-					field.set(sPacket, nameOfEffect);
-					break;
-				case "b":
-					field.setFloat(sPacket, playersX);
-					break;
-				case "c":
-					field.setFloat(sPacket, playersY);
-					break;
-				case "d":
-					field.setFloat(sPacket, playersZ);
-					break;
-				case "e":
-					field.setFloat(sPacket, xOffset);
-					break;
-				case "f":
-					field.setFloat(sPacket, yOffset);
-					break;
-				case "g":
-					field.setFloat(sPacket, zOffset);
-					break;
-				case "h":
-					field.setFloat(sPacket, effectSpeed);
-					break;
-				case "i":
-					field.setInt(sPacket, amountOfParticles);
-					break;
-				}
-			} catch (Exception e) {
-				player.sendMessage("Something went wrong....");
-				System.out.println(e.getMessage());
-			}
-		}
-		for (Player p : Bukkit.getOnlinePlayers())
-			((CraftPlayer) p).getHandle().playerConnection.sendPacket(sPacket);
 	}
 }

@@ -19,6 +19,7 @@ public class Pets extends JavaPlugin {
 	public static Pets instance = new Pets();
 
 	public void onEnable() {
+		instance = this;
 		PetsAPI.instance.petzombies = new HashMap<Entity, ControllableMob<Zombie>>();
 		PetsAPI.instance.petocelots = new HashMap<Entity, ControllableMob<Ocelot>>();
 		PetsAPI.instance.petmooshrooms = new HashMap<Entity, ControllableMob<MushroomCow>>();

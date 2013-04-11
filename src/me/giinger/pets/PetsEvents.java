@@ -156,11 +156,13 @@ public class PetsEvents implements Listener {
 		if (api.hasPet(p)) {
 			Entity pet = api.getPet(p);
 			if (!(p.getNearbyEntities(10D, 10D, 10D).contains(pet))) {
-				api.doSmoke(pet.getLocation());
-				Vector ivelo = pet.getVelocity();
-				pet.teleport(p.getLocation());
-				pet.setVelocity(ivelo);
-				api.doSmoke(pet.getLocation());
+				if (!p.isFlying()) {
+					api.doSmoke(pet.getLocation());
+					Vector ivelo = pet.getVelocity();
+					pet.teleport(p.getLocation());
+					pet.setVelocity(ivelo);
+					api.doSmoke(pet.getLocation());
+				}
 			}
 		}
 	}

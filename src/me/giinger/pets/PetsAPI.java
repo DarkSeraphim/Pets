@@ -16,6 +16,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Ageable;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -44,6 +46,7 @@ public class PetsAPI {
 	public Map<Entity, ControllableMob<Zombie>> petzombies;
 	public Map<Entity, ControllableMob<Ocelot>> petocelots;
 	public Map<Entity, ControllableMob<MushroomCow>> petmooshrooms;
+	public Map<Entity, ControllableMob<Creeper>> petcreepers;
 
 	public List<String> zombienaming = new ArrayList<String>();
 	public List<String> ocelotnaming = new ArrayList<String>();
@@ -69,6 +72,7 @@ public class PetsAPI {
 		return pet.getPetName();
 	}
 
+	@SuppressWarnings("deprecation")
 	public void setPetName(Player player, String name) {
 		pet = petlist.get(player.getName());
 		pet.setPetName(name);
@@ -76,14 +80,16 @@ public class PetsAPI {
 		ItemStack egg = mobegg.get(player);
 		ItemMeta meta = egg.getItemMeta();
 
-		String oldname = meta.getDisplayName().replace(" .+[", "");
-		String newname = ChatColor.BLUE + pet.getPetName() + " "
-				+ ChatColor.GRAY + "[" + oldname;
-		System.out.println(oldname);
-		System.out.println(newname);
+		String oldname = meta.getDisplayName().replaceAll(".+-.", "");
+		String newname = ChatColor.BLUE + pet.getPetName() + ""
+				+ ChatColor.GRAY + " - " + oldname;
 
 		meta.setDisplayName(newname);
 		egg.setItemMeta(meta);
+
+		System.out.println(egg.getItemMeta().getDisplayName());
+
+		player.updateInventory();
 	}
 
 	public void setPetLoc(Player player, Location location) {
@@ -132,10 +138,6 @@ public class PetsAPI {
 			stopParticles(p);
 	}
 
-	/**
-	 * 
-	 * @returns true if their pet has a name
-	 */
 	public boolean hasName(Player p) {
 		pet = petlist.get(p.getName());
 		if (getPetName(p) == null) {
@@ -145,20 +147,26 @@ public class PetsAPI {
 	}
 
 	public void setupPet(Player p, EntityType entitytype) {
-		if (entitytype.equals(EntityType.ZOMBIE)) {
-			if (!zombienaming.contains(p.getName()))
-				zombienaming.add(p.getName());
-		} else if (entitytype.equals(EntityType.OCELOT)) {
-			if (!ocelotnaming.contains(p.getName()))
-				ocelotnaming.add(p.getName());
-		} else if (entitytype.equals(EntityType.MUSHROOM_COW)) {
-			if (!mooshroomnaming.contains(p.getName()))
-				mooshroomnaming.add(p.getName());
+		if (!hasPet(p)) {
+			if (entitytype.equals(EntityType.ZOMBIE)) {
+				if (!zombienaming.contains(p.getName()))
+					zombienaming.add(p.getName());
+			} else if (entitytype.equals(EntityType.OCELOT)) {
+				if (!ocelotnaming.contains(p.getName()))
+					ocelotnaming.add(p.getName());
+			} else if (entitytype.equals(EntityType.MUSHROOM_COW)) {
+				if (!mooshroomnaming.contains(p.getName()))
+					mooshroomnaming.add(p.getName());
+			}
+			p.sendMessage(ChatColor.BLUE + "Please enter a " + ChatColor.BOLD
+					+ "NAME" + ChatColor.BLUE + " for your pet.");
+			p.sendMessage(ChatColor.GRAY
+					+ "The name should be between 1-16 characters and cannot contain '[', ']', or blank spaces.");
+		} else {
+			p.sendMessage(ChatColor.RED + "You must " + ChatColor.BOLD
+					+ "DISMISS" + ChatColor.RED
+					+ " your pet before you can spawn another one!");
 		}
-		p.sendMessage(ChatColor.BLUE + "Please enter a " + ChatColor.BOLD
-				+ "NAME" + ChatColor.BLUE + " for your pet.");
-		p.sendMessage(ChatColor.GRAY
-				+ "The name should be between 1-16 characters and cannot contain '[', ']', or blank spaces.");
 	}
 
 	public void spawnPet(Player player, Location location, PetType type) {
@@ -240,12 +248,31 @@ public class PetsAPI {
 						Pets.instance, new BukkitRunnable() {
 							@Override
 							public void run() {
-								particleapi.sendParticle(ParticleType.HEART, p,
+								particleapi.sendToPlayer(
+										ParticleType.ENCHANTMENT_TABLE, p,
 										mooshroom.getLocation(), 0.5F, 0.5F,
 										0.5F, 0.2F, 2);
 							}
 						}, 0L, 5L);
 		particles.put(player, task);
+	}
+
+	public void spawnCreeperPet(Location location, final Player player) {
+		final Creeper creeper = location.getWorld().spawn(location,
+				Creeper.class);
+		ControllableMob<Creeper> controlledCreeper = ControllableMobs.assign(
+				creeper, true);
+		setPet(player, creeper);
+		controlledCreeper.getProperties().setMovementSpeed(0.35F);
+		controlledCreeper.getActions().follow(player, false, 2, 1);
+		controlledCreeper.getActions().lookAt(player);
+		((Ageable) controlledCreeper.getEntity()).setBaby();
+		((Ageable) controlledCreeper.getEntity()).setAgeLock(true);
+		controlledCreeper.getEntity().setCanPickupItems(false);
+		controlledCreeper.getEntity().setCustomName(pet.getPetName());
+		controlledCreeper.getEntity().setCustomNameVisible(true);
+		doSmoke(location);
+		petcreepers.put(player, controlledCreeper);
 	}
 
 	public static void stopParticles(Player player) {
@@ -283,16 +310,20 @@ public class PetsAPI {
 
 		if (type.equals(EggType.ZOMBIE_EGG)) {
 			meta.setDisplayName(ChatColor.BLUE + name + ChatColor.GRAY
-					+ " [Baby Zombie]");
+					+ " - [Baby Zombie]");
 			egg.setDurability((short) 54);
 		} else if (type.equals(EggType.CAT_EGG)) {
 			meta.setDisplayName(ChatColor.BLUE + name + ChatColor.GRAY
-					+ " [Baby Ocelot]");
+					+ " - [Baby Ocelot]");
 			egg.setDurability((short) 98);
 		} else if (type.equals(EggType.MOOSHROOM_EGG)) {
 			meta.setDisplayName(ChatColor.BLUE + name + ChatColor.GRAY
-					+ " [Baby Mooshroom]");
+					+ " - [Baby Mooshroom]");
 			egg.setDurability((short) 96);
+		} else if (type.equals(EggType.CREEPER_EGG)) {
+			meta.setDisplayName(ChatColor.BLUE + name + ChatColor.GRAY
+					+ " - [Baby Mooshroom]");
+			egg.setDurability((short) 50);
 		}
 		egg.setItemMeta(meta);
 		player.getInventory().addItem(egg);

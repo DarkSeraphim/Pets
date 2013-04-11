@@ -8,6 +8,8 @@ import java.util.Random;
 
 import me.giinger.particleapi.ParticleAPI;
 import me.giinger.particleapi.ParticleType;
+import me.giinger.pets.enums.EggType;
+import me.giinger.pets.enums.PetType;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -23,6 +25,7 @@ import org.bukkit.entity.Ocelot.Type;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import de.ntcomputer.minecraft.controllablemobs.api.ControllableMob;
@@ -30,11 +33,13 @@ import de.ntcomputer.minecraft.controllablemobs.api.ControllableMobs;
 
 public class PetsAPI {
 
-	public static PetsAPI instance = new PetsAPI();
-	public static ParticleAPI particleapi = new ParticleAPI();
+	public static PetsAPI instance;
+	public static ParticleAPI particleapi;
 
 	public Map<String, Pet> petlist = new HashMap<String, Pet>();
 	public static Map<Player, Integer> particles = new HashMap<Player, Integer>();
+
+	public Map<Player, ItemStack> mobegg = new HashMap<Player, ItemStack>();
 
 	public Map<Entity, ControllableMob<Zombie>> petzombies;
 	public Map<Entity, ControllableMob<Ocelot>> petocelots;
@@ -61,15 +66,24 @@ public class PetsAPI {
 
 	public String getPetName(Player player) {
 		pet = petlist.get(player.getName());
-		if (pet.getPetName() != null)
-			return pet.getPetName();
-		else
-			return null;
+		return pet.getPetName();
 	}
 
 	public void setPetName(Player player, String name) {
 		pet = petlist.get(player.getName());
 		pet.setPetName(name);
+
+		ItemStack egg = mobegg.get(player);
+		ItemMeta meta = egg.getItemMeta();
+
+		String oldname = meta.getDisplayName().replace(" .+[", "");
+		String newname = ChatColor.BLUE + pet.getPetName() + " "
+				+ ChatColor.GRAY + "[" + oldname;
+		System.out.println(oldname);
+		System.out.println(newname);
+
+		meta.setDisplayName(newname);
+		egg.setItemMeta(meta);
 	}
 
 	public void setPetLoc(Player player, Location location) {
@@ -92,11 +106,13 @@ public class PetsAPI {
 
 	public void killPet(Player player) {
 		pet = petlist.get(player.getName());
-		((LivingEntity) pet.getPet()).setHealth(1);
-		((LivingEntity) pet.getPet()).damage(1);
-		pet.setPet(null);
-		for (Player p : Bukkit.getOnlinePlayers())
-			stopParticles(p);
+		if (hasPet(player)) {
+			((LivingEntity) pet.getPet()).setHealth(1);
+			((LivingEntity) pet.getPet()).damage(1);
+			pet.setPet(null);
+			for (Player p : Bukkit.getOnlinePlayers())
+				stopParticles(p);
+		}
 	}
 
 	public static void killAllPets() {
@@ -118,9 +134,10 @@ public class PetsAPI {
 
 	/**
 	 * 
-	 * @return true if their pet has a name
+	 * @returns true if their pet has a name
 	 */
 	public boolean hasName(Player p) {
+		pet = petlist.get(p.getName());
 		if (getPetName(p) == null) {
 			return false;
 		} else
@@ -138,8 +155,20 @@ public class PetsAPI {
 			if (!mooshroomnaming.contains(p.getName()))
 				mooshroomnaming.add(p.getName());
 		}
-		p.sendMessage(ChatColor.YELLOW
-				+ "What would you like to name your pet?");
+		p.sendMessage(ChatColor.BLUE + "Please enter a " + ChatColor.BOLD
+				+ "NAME" + ChatColor.BLUE + " for your pet.");
+		p.sendMessage(ChatColor.GRAY
+				+ "The name should be between 1-16 characters and cannot contain '[', ']', or blank spaces.");
+	}
+
+	public void spawnPet(Player player, Location location, PetType type) {
+		if (type.equals(PetType.PET_ZOMBIE)) {
+			spawnZombiePet(location, player);
+		} else if (type.equals(PetType.PET_CAT)) {
+			spawnOcelotPet(location, player);
+		} else if (type.equals(PetType.PET_MOOSHROOM)) {
+			spawnMooshroomPet(location, player);
+		}
 	}
 
 	public void spawnZombiePet(Location location, Player player) {
@@ -148,11 +177,9 @@ public class PetsAPI {
 				zombie, true);
 		setPet(player, zombie);
 		controlledZombie.getActions().follow(player, false, 2, 1);
-		controlledZombie.getActions().lookAt(player);
-		controlledZombie.getEntity().getEquipment()
-				.setHelmet(new ItemStack(Material.DIAMOND_HELMET));
 		controlledZombie.getEntity().setBaby(true);
-		controlledZombie.getEntity().setVillager(true);
+		if (Configuration.config.getBoolean("Pets.Zombie.Villager"))
+			controlledZombie.getEntity().setVillager(true);
 		controlledZombie.getEntity().setCanPickupItems(false);
 		controlledZombie.getEntity().setCustomName(pet.getPetName());
 		controlledZombie.getEntity().setCustomNameVisible(true);
@@ -207,22 +234,25 @@ public class PetsAPI {
 		doSmoke(location);
 		petmooshrooms.put(player, controlledMooshroom);
 		int task = 0;
-		for (final Player p : Bukkit.getOnlinePlayers())
-			task = Bukkit.getScheduler().scheduleSyncRepeatingTask(
-					Pets.instance, new BukkitRunnable() {
-						@Override
-						public void run() {
-							particleapi.sendParticle(ParticleType.HEART, p,
-									mooshroom.getLocation(), 0.5F, 0.5F, 0.5F,
-									0.2F, 2);
-						}
-					}, 0L, 5L);
+		if (Configuration.config.getBoolean("Pets.Mooshroom.Hearts"))
+			for (final Player p : Bukkit.getOnlinePlayers())
+				task = Bukkit.getScheduler().scheduleSyncRepeatingTask(
+						Pets.instance, new BukkitRunnable() {
+							@Override
+							public void run() {
+								particleapi.sendParticle(ParticleType.HEART, p,
+										mooshroom.getLocation(), 0.5F, 0.5F,
+										0.5F, 0.2F, 2);
+							}
+						}, 0L, 5L);
 		particles.put(player, task);
 	}
 
 	public static void stopParticles(Player player) {
-		int task = particles.get(player);
-		Bukkit.getScheduler().cancelTask(task);
+		if (particles.get(player) != null) {
+			int task = particles.get(player);
+			Bukkit.getScheduler().cancelTask(task);
+		}
 	}
 
 	public void doSmoke(Location location) {
@@ -230,5 +260,41 @@ public class PetsAPI {
 		location.getWorld().playEffect(location, Effect.SMOKE, 2);
 		location.getWorld().playEffect(location, Effect.SMOKE, 6);
 		location.getWorld().playEffect(location, Effect.SMOKE, 8);
+	}
+
+	public void giveEgg(Player player, EggType type) {
+		ItemStack egg = new ItemStack(Material.MONSTER_EGG, 1);
+		ItemMeta meta = egg.getItemMeta();
+		List<String> lore = new ArrayList<String>();
+		pet = petlist.get(player.getName());
+		lore.add(ChatColor.BLUE + "Right Click: " + ChatColor.GRAY
+				+ "Summon/Dismiss Pet");
+		lore.add(ChatColor.BLUE + "Left Click: " + ChatColor.GRAY
+				+ "Rename Pet");
+		lore.add(ChatColor.GRAY + "Permanent Untradeable");
+		meta.setLore(lore);
+		lore.clear();
+
+		String name = "???";
+
+		if (pet.getPetName() != null) {
+			name = pet.getPetName();
+		}
+
+		if (type.equals(EggType.ZOMBIE_EGG)) {
+			meta.setDisplayName(ChatColor.BLUE + name + ChatColor.GRAY
+					+ " [Baby Zombie]");
+			egg.setDurability((short) 54);
+		} else if (type.equals(EggType.CAT_EGG)) {
+			meta.setDisplayName(ChatColor.BLUE + name + ChatColor.GRAY
+					+ " [Baby Ocelot]");
+			egg.setDurability((short) 98);
+		} else if (type.equals(EggType.MOOSHROOM_EGG)) {
+			meta.setDisplayName(ChatColor.BLUE + name + ChatColor.GRAY
+					+ " [Baby Mooshroom]");
+			egg.setDurability((short) 96);
+		}
+		egg.setItemMeta(meta);
+		player.getInventory().addItem(egg);
 	}
 }

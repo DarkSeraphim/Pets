@@ -3,7 +3,13 @@ package me.giinger.pets;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import me.giinger.particleapi.ParticleAPI;
+import me.giinger.pets.enums.EggType;
+
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.MushroomCow;
 import org.bukkit.entity.Ocelot;
@@ -16,13 +22,21 @@ import de.ntcomputer.minecraft.controllablemobs.api.ControllableMob;
 public class Pets extends JavaPlugin {
 	Logger log = Logger.getLogger("Minecraft");
 
-	public static Pets instance = new Pets();
+	public static Pets instance;
+	public PetsAPI api = PetsAPI.instance;
 
 	public void onEnable() {
 		instance = this;
+		PetsAPI.instance = new PetsAPI();
+		PetsAPI.particleapi = new ParticleAPI();
+		Pet.instance = new Pet();
+		Configuration.instance = new Configuration();
+
 		PetsAPI.instance.petzombies = new HashMap<Entity, ControllableMob<Zombie>>();
 		PetsAPI.instance.petocelots = new HashMap<Entity, ControllableMob<Ocelot>>();
 		PetsAPI.instance.petmooshrooms = new HashMap<Entity, ControllableMob<MushroomCow>>();
+
+		Configuration.instance.setupConfig();
 		getServer().getPluginManager().registerEvents(new PetsEvents(), this);
 		log.info("[MMORPG] Pets v1.0 Enabled!");
 
@@ -34,5 +48,28 @@ public class Pets extends JavaPlugin {
 	public void onDisable() {
 		PetsAPI.killAllPets();
 		log.info("[MMORPG] Pets v1.0 Disabled!");
+	}
+
+	public boolean onCommand(CommandSender sender, Command cmd, String lbl,
+			String[] args) {
+		if (cmd.getName().equalsIgnoreCase("petegg")) {
+			if (sender.isOp()) {
+				if (args.length == 1) {
+					if (args[0].equalsIgnoreCase("zombie")) {
+						PetsAPI.instance.giveEgg((Player) sender,
+								EggType.ZOMBIE_EGG);
+					} else if (args[0].equalsIgnoreCase("cat")) {
+						PetsAPI.instance.giveEgg((Player) sender,
+								EggType.CAT_EGG);
+					} else if (args[0].equalsIgnoreCase("mooshroom")) {
+						PetsAPI.instance.giveEgg((Player) sender,
+								EggType.MOOSHROOM_EGG);
+					} else
+						sender.sendMessage(ChatColor.RED
+								+ "Wrong type: zombie/cat/mooshroom");
+				}
+			}
+		}
+		return true;
 	}
 }

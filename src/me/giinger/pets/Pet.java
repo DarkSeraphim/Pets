@@ -5,11 +5,14 @@ import org.bukkit.entity.Entity;
 
 public class Pet {
 
-	public static Pet instance;
-
 	String petname;
 	Entity pet;
 	Location loc;
+
+	long one;
+	long two;
+	long three;
+	int particletask;
 
 	public String getPetName() {
 		return petname;
@@ -17,7 +20,6 @@ public class Pet {
 
 	public void setPetName(String s) {
 		this.petname = s;
-		System.out.println("Set pet name to: " + s);
 	}
 
 	public Entity getPet() {

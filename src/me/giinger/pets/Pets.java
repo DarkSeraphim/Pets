@@ -10,7 +10,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.MushroomCow;
 import org.bukkit.entity.Ocelot;
 import org.bukkit.entity.Player;
@@ -29,12 +28,11 @@ public class Pets extends JavaPlugin {
 		instance = this;
 		PetsAPI.instance = new PetsAPI();
 		PetsAPI.particleapi = new ParticleAPI();
-		Pet.instance = new Pet();
 		Configuration.instance = new Configuration();
 
-		PetsAPI.instance.petzombies = new HashMap<Entity, ControllableMob<Zombie>>();
-		PetsAPI.instance.petocelots = new HashMap<Entity, ControllableMob<Ocelot>>();
-		PetsAPI.instance.petmooshrooms = new HashMap<Entity, ControllableMob<MushroomCow>>();
+		PetsAPI.instance.petzombies = new HashMap<String, ControllableMob<Zombie>>();
+		PetsAPI.instance.petocelots = new HashMap<String, ControllableMob<Ocelot>>();
+		PetsAPI.instance.petmooshrooms = new HashMap<String, ControllableMob<MushroomCow>>();
 
 		Configuration.instance.setupConfig();
 		getServer().getPluginManager().registerEvents(new PetsEvents(), this);

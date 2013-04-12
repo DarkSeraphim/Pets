@@ -125,6 +125,8 @@ public class PetsAPI {
 			((LivingEntity) pet.getPet()).setHealth(1);
 			((LivingEntity) pet.getPet()).damage(1);
 			pet.setPet(null);
+			pet.setPetName(null);
+			pet.type = null;
 			stopParticles(player);
 			mobegg.remove(player.getName());
 		}
@@ -171,12 +173,16 @@ public class PetsAPI {
 	}
 
 	public void spawnPet(Player player, Location location, PetType type) {
+		pet = petlist.get(player.getName());
 		if (type.equals(PetType.PET_ZOMBIE)) {
 			spawnZombiePet(location, player);
+			pet.type = PetType.PET_ZOMBIE;
 		} else if (type.equals(PetType.PET_CAT)) {
 			spawnOcelotPet(location, player);
+			pet.type = PetType.PET_CAT;
 		} else if (type.equals(PetType.PET_MOOSHROOM)) {
 			spawnMooshroomPet(location, player);
+			pet.type = PetType.PET_MOOSHROOM;
 		}
 		cantSpawn.add(player.getName());
 		doTimer(player);
@@ -200,13 +206,15 @@ public class PetsAPI {
 	}
 
 	private void spawnOcelotPet(Location location, Player player) {
+		// pet = petlist.get(player.getName());
+		// float petspeed = pet.speed;
 		Ocelot ocelot = location.getWorld().spawn(location, Ocelot.class);
 		ControllableMob<Ocelot> controlledOcelot = ControllableMobs.assign(
 				ocelot, true);
 		setPet(player, ocelot);
 		controlledOcelot.getEntity().setTamed(true);
 		controlledOcelot.getEntity().setOwner(player);
-		controlledOcelot.getProperties().setMovementSpeed(0.35F);
+		// controlledOcelot.getProperties().setMovementSpeed(petspeed);
 		controlledOcelot.getActions().follow(player, true, 2, 1);
 		controlledOcelot.getActions().lookAt(player);
 		Random gen = new Random();
@@ -231,12 +239,14 @@ public class PetsAPI {
 	}
 
 	private void spawnMooshroomPet(Location location, Player player) {
+		// pet = petlist.get(player.getName());
+		// float petspeed = pet.speed;
 		final MushroomCow mooshroom = location.getWorld().spawn(location,
 				MushroomCow.class);
 		ControllableMob<MushroomCow> controlledMooshroom = ControllableMobs
 				.assign(mooshroom, true);
 		setPet(player, mooshroom);
-		controlledMooshroom.getProperties().setMovementSpeed(0.35F);
+		// controlledMooshroom.getProperties().setMovementSpeed(petspeed);
 		controlledMooshroom.getActions().follow(player, false, 2, 1);
 		controlledMooshroom.getActions().lookAt(player);
 		controlledMooshroom.getEntity().setBaby();

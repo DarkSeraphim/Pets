@@ -13,11 +13,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 public class PetsEvents implements Listener {
@@ -170,6 +172,24 @@ public class PetsEvents implements Listener {
 			p.sendMessage(ChatColor.RED + "Wait " + ChatColor.BOLD + "2s");
 		} else if (x > two && x <= three) {
 			p.sendMessage(ChatColor.RED + "Wait " + ChatColor.BOLD + "1s");
+		}
+	}
+
+	@EventHandler
+	public void onItemThrow(PlayerDropItemEvent event) {
+		final ItemStack thrown = event.getItemDrop().getItemStack();
+
+		System.out.println("CURSOR: " + thrown);
+
+		CharSequence egg = "[Baby";
+
+		if (thrown.getType() == Material.MONSTER_EGG) {
+			if (thrown.hasItemMeta()) {
+				ItemMeta meta = thrown.getItemMeta();
+				if (meta.getDisplayName().contains(egg)) {
+					event.setCancelled(true);
+				}
+			}
 		}
 	}
 

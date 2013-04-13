@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import me.giinger.particleapi.ParticleAPI;
 import me.giinger.pets.enums.EggType;
+import me.giinger.pets.enums.PetType;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -25,14 +26,19 @@ public class Pets extends JavaPlugin {
 	public PetsAPI api = PetsAPI.instance;
 
 	public void onEnable() {
+		/* Instantiate Stuff */
 		instance = this;
 		PetsAPI.instance = new PetsAPI();
 		PetsAPI.particleapi = new ParticleAPI();
 		Configuration.instance = new Configuration();
+		SQLHandler.instance = new SQLHandler();
 
 		PetsAPI.instance.petzombies = new HashMap<String, ControllableMob<Zombie>>();
 		PetsAPI.instance.petocelots = new HashMap<String, ControllableMob<Ocelot>>();
 		PetsAPI.instance.petmooshrooms = new HashMap<String, ControllableMob<MushroomCow>>();
+		/* End of Instantiations */
+
+		SQLHandler.instance.connectSQL();
 
 		Configuration.instance.setupConfig();
 		getServer().getPluginManager().registerEvents(new PetsEvents(), this);
@@ -44,6 +50,7 @@ public class Pets extends JavaPlugin {
 	}
 
 	public void onDisable() {
+		SQLHandler.instance.closeSQL();
 		PetsAPI.killAllPets();
 		log.info("[MMORPG] Pets v1.0 Disabled!");
 	}
@@ -54,14 +61,26 @@ public class Pets extends JavaPlugin {
 			if (sender.isOp()) {
 				if (args.length == 1) {
 					if (args[0].equalsIgnoreCase("zombie")) {
-						PetsAPI.instance.giveEgg((Player) sender,
-								EggType.ZOMBIE_EGG);
+						if (!PetsAPI.instance.hasEgg((Player) sender,
+								EggType.ZOMBIE_EGG))
+							PetsAPI.instance.giveEgg((Player) sender,
+									EggType.ZOMBIE_EGG);
+						SQLHandler.instance.setSQLPet((Player) sender,
+								PetType.PET_ZOMBIE);
 					} else if (args[0].equalsIgnoreCase("cat")) {
-						PetsAPI.instance.giveEgg((Player) sender,
-								EggType.CAT_EGG);
+						if (!PetsAPI.instance.hasEgg((Player) sender,
+								EggType.CAT_EGG))
+							PetsAPI.instance.giveEgg((Player) sender,
+									EggType.CAT_EGG);
+						SQLHandler.instance.setSQLPet((Player) sender,
+								PetType.PET_CAT);
 					} else if (args[0].equalsIgnoreCase("mooshroom")) {
-						PetsAPI.instance.giveEgg((Player) sender,
-								EggType.MOOSHROOM_EGG);
+						if (!PetsAPI.instance.hasEgg((Player) sender,
+								EggType.MOOSHROOM_EGG))
+							PetsAPI.instance.giveEgg((Player) sender,
+									EggType.MOOSHROOM_EGG);
+						SQLHandler.instance.setSQLPet((Player) sender,
+								PetType.PET_MOOSHROOM);
 					} else
 						sender.sendMessage(ChatColor.RED
 								+ "Wrong type: zombie/cat/mooshroom");

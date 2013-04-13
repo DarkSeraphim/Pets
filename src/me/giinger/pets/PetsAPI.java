@@ -195,8 +195,9 @@ public class PetsAPI {
 		setPet(player, zombie);
 		controlledZombie.getActions().follow(player, false, 2, 1);
 		controlledZombie.getEntity().setBaby(true);
-		if (Configuration.config.getBoolean("Pets.Zombie.Villager"))
+		if (Configuration.instance.config.getBoolean("Pets.Zombie.Villager"))
 			controlledZombie.getEntity().setVillager(true);
+		controlledZombie.getProperties().setMovementSpeed(0.35F);
 		controlledZombie.getEntity().setCanPickupItems(false);
 		controlledZombie.getEntity().setCustomName(
 				getPetName(mobegg.get(player.getName())));
@@ -206,17 +207,15 @@ public class PetsAPI {
 	}
 
 	private void spawnOcelotPet(Location location, Player player) {
-		// pet = petlist.get(player.getName());
-		// float petspeed = pet.speed;
 		Ocelot ocelot = location.getWorld().spawn(location, Ocelot.class);
 		ControllableMob<Ocelot> controlledOcelot = ControllableMobs.assign(
 				ocelot, true);
 		setPet(player, ocelot);
 		controlledOcelot.getEntity().setTamed(true);
 		controlledOcelot.getEntity().setOwner(player);
-		// controlledOcelot.getProperties().setMovementSpeed(petspeed);
 		controlledOcelot.getActions().follow(player, true, 2, 1);
 		controlledOcelot.getActions().lookAt(player);
+		controlledOcelot.getProperties().setMovementSpeed(0.35F);
 		Random gen = new Random();
 		int x = gen.nextInt(4);
 		if (x == 1) {
@@ -239,16 +238,14 @@ public class PetsAPI {
 	}
 
 	private void spawnMooshroomPet(Location location, Player player) {
-		// pet = petlist.get(player.getName());
-		// float petspeed = pet.speed;
 		final MushroomCow mooshroom = location.getWorld().spawn(location,
 				MushroomCow.class);
 		ControllableMob<MushroomCow> controlledMooshroom = ControllableMobs
 				.assign(mooshroom, true);
 		setPet(player, mooshroom);
-		// controlledMooshroom.getProperties().setMovementSpeed(petspeed);
 		controlledMooshroom.getActions().follow(player, false, 2, 1);
 		controlledMooshroom.getActions().lookAt(player);
+		controlledMooshroom.getProperties().setMovementSpeed(0.35F);
 		controlledMooshroom.getEntity().setBaby();
 		controlledMooshroom.getEntity().setAgeLock(true);
 		controlledMooshroom.getEntity().setCanPickupItems(false);
@@ -258,7 +255,7 @@ public class PetsAPI {
 		doSmoke(location);
 		petmooshrooms.put(player.getName(), controlledMooshroom);
 		int task = 0;
-		if (Configuration.config.getBoolean("Pets.Mooshroom.Hearts"))
+		if (Configuration.instance.config.getBoolean("Pets.Mooshroom.Hearts"))
 			task = Bukkit.getScheduler().scheduleSyncRepeatingTask(
 					Pets.instance, new BukkitRunnable() {
 						@Override
@@ -317,6 +314,35 @@ public class PetsAPI {
 		}
 		egg.setItemMeta(meta);
 		player.getInventory().addItem(egg);
+	}
+
+	public boolean hasEgg(Player p, EggType type) {
+		for (ItemStack i : p.getInventory().getContents()) {
+			if (i != null) {
+				if (i.hasItemMeta()) {
+					ItemMeta meta = i.getItemMeta();
+					if (i.getType() == Material.MONSTER_EGG) {
+						CharSequence zombie = "Zombie";
+						CharSequence ocelot = "Ocelot";
+						CharSequence mooshroom = "Mooshroom";
+						if (type == EggType.ZOMBIE_EGG) {
+							if (meta.getDisplayName().contains(zombie)) {
+								return true;
+							}
+						} else if (type == EggType.CAT_EGG) {
+							if (meta.getDisplayName().contains(ocelot)) {
+								return true;
+							}
+						} else if (type == EggType.MOOSHROOM_EGG) {
+							if (meta.getDisplayName().contains(mooshroom)) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	private void doTimer(final Player p) {

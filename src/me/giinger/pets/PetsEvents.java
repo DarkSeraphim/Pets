@@ -20,8 +20,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import de.ntcomputer.minecraft.controllablemobs.api.ControllableMob;
-
 public class PetsEvents implements Listener {
 
 	PetsAPI api = PetsAPI.instance;
@@ -31,6 +29,8 @@ public class PetsEvents implements Listener {
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		Player p = e.getPlayer();
 		PetsAPI.instance.petlist.put(p.getName(), new Pet());
+
+		SQLHandler.instance.giveEggs(p);
 	}
 
 	@EventHandler
@@ -133,23 +133,24 @@ public class PetsEvents implements Listener {
 										api.setupPet(p, EntityType.MUSHROOM_COW);
 									}
 								}
-							}
-						} else if (e.getAction() == Action.LEFT_CLICK_AIR
-								|| e.getAction() == Action.LEFT_CLICK_BLOCK) {
-							if (!api.mobegg.containsKey(p.getName()))
-								api.mobegg.put(p.getName(), i);
-							if (i.getDurability() == 54) {
-								/* Zombie Pet */
-								api.setupPet(p, EntityType.ZOMBIE);
-							} else if (i.getDurability() == 98) {
-								/* Ocelot Pet */
-								api.setupPet(p, EntityType.OCELOT);
-							} else if (i.getDurability() == 96) {
-								/* Mooshroom Pet */
-								api.setupPet(p, EntityType.MUSHROOM_COW);
+							} else if (e.getAction() == Action.LEFT_CLICK_AIR
+									|| e.getAction() == Action.LEFT_CLICK_BLOCK) {
+								if (!api.mobegg.containsKey(p.getName()))
+									api.mobegg.put(p.getName(), i);
+								if (i.getDurability() == 54) {
+									/* Zombie Pet */
+									api.setupPet(p, EntityType.ZOMBIE);
+								} else if (i.getDurability() == 98) {
+									/* Ocelot Pet */
+									api.setupPet(p, EntityType.OCELOT);
+								} else if (i.getDurability() == 96) {
+									/* Mooshroom Pet */
+									api.setupPet(p, EntityType.MUSHROOM_COW);
+								}
 							}
 						}
 					} else {
+						e.setCancelled(true);
 						Pet pet = api.petlist.get(p.getName());
 						long one = pet.one;
 						long two = pet.two;
@@ -174,7 +175,7 @@ public class PetsEvents implements Listener {
 
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent e) {
-		Player p = e.getPlayer();
+		final Player p = e.getPlayer();
 		if (api.hasPet(p)) {
 			Entity pet = api.getPet(p);
 			if (!(p.getNearbyEntities(10D, 10D, 10D).contains(pet))) {
@@ -184,29 +185,6 @@ public class PetsEvents implements Listener {
 					pet.teleport(p.getLocation());
 					pet.setVelocity(ivelo);
 					api.doSmoke(pet.getLocation());
-				}
-			}
-		}
-
-		pet = api.petlist.get(p.getName());
-		if (pet.type != null) {
-
-			@SuppressWarnings("rawtypes")
-			ControllableMob pets = null;
-			if (pet.type == PetType.PET_MOOSHROOM) {
-				pets = api.petmooshrooms.get(p.getName());
-			} else if (pet.type == PetType.PET_CAT) {
-				pets = api.petocelots.get(p.getName());
-			} else if (pet.type == PetType.PET_ZOMBIE) {
-				pets = api.petzombies.get(p.getName());
-			}
-			if (p.isSprinting()) {
-				pets.getProperties().setMovementSpeed(4.5F);
-				System.out.println(pets.getProperties().getMovementSpeed());
-			} else {
-				if (api.hasPet(p)) {
-					pets.getProperties().setMovementSpeed(3.5F);
-					System.out.println(pets.getProperties().getMovementSpeed());
 				}
 			}
 		}

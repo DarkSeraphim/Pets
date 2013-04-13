@@ -178,11 +178,7 @@ public class PetsEvents implements Listener {
 	@EventHandler
 	public void onItemThrow(PlayerDropItemEvent event) {
 		final ItemStack thrown = event.getItemDrop().getItemStack();
-
-		System.out.println("CURSOR: " + thrown);
-
 		CharSequence egg = "[Baby";
-
 		if (thrown.getType() == Material.MONSTER_EGG) {
 			if (thrown.hasItemMeta()) {
 				ItemMeta meta = thrown.getItemMeta();

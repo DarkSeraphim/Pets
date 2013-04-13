@@ -121,7 +121,8 @@ public class SQLHandler {
 				rs.next();
 				String s = rs.getString("PetTypes");
 				pst = con.prepareStatement("UPDATE Pets SET PetTypes='" + s
-						+ type.name() + "," + "'");
+						+ type.name() + "," + "' WHERE Name='" + p.getName()
+						+ "'");
 				pst.executeUpdate();
 			}
 		} catch (SQLException e) {

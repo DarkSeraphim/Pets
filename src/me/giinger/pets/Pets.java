@@ -8,7 +8,6 @@ import me.giinger.pets.enums.EggType;
 import me.giinger.pets.enums.PetType;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.MushroomCow;
@@ -59,31 +58,33 @@ public class Pets extends JavaPlugin {
 			String[] args) {
 		if (cmd.getName().equalsIgnoreCase("petegg")) {
 			if (sender.isOp()) {
-				if (args.length == 1) {
-					if (args[0].equalsIgnoreCase("zombie")) {
-						if (!PetsAPI.instance.hasEgg((Player) sender,
-								EggType.ZOMBIE_EGG))
-							PetsAPI.instance.giveEgg((Player) sender,
-									EggType.ZOMBIE_EGG);
-						SQLHandler.instance.setSQLPet((Player) sender,
-								PetType.PET_ZOMBIE);
-					} else if (args[0].equalsIgnoreCase("cat")) {
-						if (!PetsAPI.instance.hasEgg((Player) sender,
-								EggType.CAT_EGG))
-							PetsAPI.instance.giveEgg((Player) sender,
-									EggType.CAT_EGG);
-						SQLHandler.instance.setSQLPet((Player) sender,
-								PetType.PET_CAT);
-					} else if (args[0].equalsIgnoreCase("mooshroom")) {
-						if (!PetsAPI.instance.hasEgg((Player) sender,
-								EggType.MOOSHROOM_EGG))
-							PetsAPI.instance.giveEgg((Player) sender,
-									EggType.MOOSHROOM_EGG);
-						SQLHandler.instance.setSQLPet((Player) sender,
-								PetType.PET_MOOSHROOM);
-					} else
-						sender.sendMessage(ChatColor.RED
-								+ "Wrong type: zombie/cat/mooshroom");
+				if (args.length == 2) {
+					Player p = getServer().getPlayer(args[0]);
+					if (p != null)
+						if (args[1].equalsIgnoreCase("zombie")) {
+							if (!PetsAPI.instance.hasEgg(p, EggType.ZOMBIE_EGG))
+								PetsAPI.instance.giveEgg(p, EggType.ZOMBIE_EGG);
+							SQLHandler.instance
+									.setSQLPet(p, PetType.PET_ZOMBIE);
+							System.out.println(p.getName());
+						} else if (args[1].equalsIgnoreCase("cat")) {
+							if (!PetsAPI.instance.hasEgg(p, EggType.CAT_EGG))
+								PetsAPI.instance.giveEgg(p, EggType.CAT_EGG);
+							SQLHandler.instance.setSQLPet(p, PetType.PET_CAT);
+							System.out.println(p.getName());
+						} else if (args[1].equalsIgnoreCase("mooshroom")) {
+							if (!PetsAPI.instance.hasEgg(p,
+									EggType.MOOSHROOM_EGG))
+								PetsAPI.instance.giveEgg(p,
+										EggType.MOOSHROOM_EGG);
+							SQLHandler.instance.setSQLPet(p,
+									PetType.PET_MOOSHROOM);
+							System.out.println(p.getName());
+						} else
+							sender.sendMessage("Wrong type: zombie/cat/mooshroom");
+					else
+						sender.sendMessage("Player: " + args[0]
+								+ " is not online.");
 				}
 			}
 		}

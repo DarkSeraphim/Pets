@@ -194,10 +194,11 @@ public class PetsAPI {
 				zombie, true);
 		setPet(player, zombie);
 		controlledZombie.getActions().follow(player, false, 2, 1);
+		controlledZombie.getActions().lookAt(player);
 		controlledZombie.getEntity().setBaby(true);
 		if (Configuration.instance.config.getBoolean("Pets.Zombie.Villager"))
 			controlledZombie.getEntity().setVillager(true);
-		controlledZombie.getProperties().setMovementSpeed(0.35F);
+		// controlledZombie.getProperties().setMovementSpeed(0.35F);
 		controlledZombie.getEntity().setCanPickupItems(false);
 		controlledZombie.getEntity().setCustomName(
 				getPetName(mobegg.get(player.getName())));
@@ -263,7 +264,7 @@ public class PetsAPI {
 							for (final Player p : Bukkit.getOnlinePlayers()) {
 								particleapi.sendToPlayer(ParticleType.HEART, p,
 										mooshroom.getLocation(), 0.5F, 0.5F,
-										0.5F, 0.2F, 2);
+										0.5F, 0.2F, 1);
 							}
 						}
 					}, 0L, 5L);

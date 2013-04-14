@@ -150,14 +150,14 @@ public class PetsEvents implements Listener {
 									api.setupPet(p, EntityType.MUSHROOM_COW);
 								}
 							}
+						} else {
+							e.setCancelled(true);
+							Pet pet = api.petlist.get(p.getName());
+							long one = pet.one;
+							long two = pet.two;
+							long three = pet.three;
+							getTimeLeft(p, one, two, three);
 						}
-					} else {
-						e.setCancelled(true);
-						Pet pet = api.petlist.get(p.getName());
-						long one = pet.one;
-						long two = pet.two;
-						long three = pet.three;
-						getTimeLeft(p, one, two, three);
 					}
 			}
 		}

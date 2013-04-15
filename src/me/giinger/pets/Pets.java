@@ -66,12 +66,10 @@ public class Pets extends JavaPlugin {
 								PetsAPI.instance.giveEgg(p, EggType.ZOMBIE_EGG);
 							SQLHandler.instance
 									.setSQLPet(p, PetType.PET_ZOMBIE);
-							System.out.println(p.getName());
 						} else if (args[1].equalsIgnoreCase("cat")) {
 							if (!PetsAPI.instance.hasEgg(p, EggType.CAT_EGG))
 								PetsAPI.instance.giveEgg(p, EggType.CAT_EGG);
 							SQLHandler.instance.setSQLPet(p, PetType.PET_CAT);
-							System.out.println(p.getName());
 						} else if (args[1].equalsIgnoreCase("mooshroom")) {
 							if (!PetsAPI.instance.hasEgg(p,
 									EggType.MOOSHROOM_EGG))
@@ -79,7 +77,6 @@ public class Pets extends JavaPlugin {
 										EggType.MOOSHROOM_EGG);
 							SQLHandler.instance.setSQLPet(p,
 									PetType.PET_MOOSHROOM);
-							System.out.println(p.getName());
 						} else
 							sender.sendMessage("Wrong type: zombie/cat/mooshroom");
 					else

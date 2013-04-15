@@ -28,6 +28,7 @@ public class SQLHandler {
 	public void connectSQL() {
 		try {
 			con = DriverManager.getConnection(url, user, password);
+			System.out.println("[MMORPG] Pets: Connection Established!");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -36,6 +37,7 @@ public class SQLHandler {
 	public void closeSQL() {
 		try {
 			con.close();
+			System.out.println("[MMORPG] Pets: Connection Closed!");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -43,6 +45,9 @@ public class SQLHandler {
 
 	public boolean hasPet(Player p) {
 		try {
+			if (con.isClosed()) {
+				connectSQL();
+			}
 			pst = con.prepareStatement("SELECT * FROM Pets WHERE Name='"
 					+ p.getName() + "'");
 			rs = pst.executeQuery();
@@ -59,6 +64,9 @@ public class SQLHandler {
 
 	public String[] getPets(Player p) {
 		try {
+			if (con.isClosed()) {
+				connectSQL();
+			}
 			pst = con.prepareStatement("SELECT * FROM Pets WHERE Name='"
 					+ p.getName() + "'");
 			rs = pst.executeQuery();
@@ -97,7 +105,9 @@ public class SQLHandler {
 	public void setSQLPet(Player p, PetType type) {
 		try {
 			if (!hasPet(p)) {
-				pst = con.prepareStatement("");
+				if (con.isClosed()) {
+					connectSQL();
+				}
 				pst = con
 						.prepareStatement("INSERT INTO Pets(Name, PetTypes) VALUES('"
 								+ p.getName()

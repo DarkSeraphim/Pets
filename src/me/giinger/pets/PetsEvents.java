@@ -12,6 +12,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -19,7 +21,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 public class PetsEvents implements Listener {
@@ -178,14 +179,8 @@ public class PetsEvents implements Listener {
 	@EventHandler
 	public void onItemThrow(PlayerDropItemEvent event) {
 		final ItemStack thrown = event.getItemDrop().getItemStack();
-		CharSequence egg = "[Baby";
-		if (thrown.getType() == Material.MONSTER_EGG) {
-			if (thrown.hasItemMeta()) {
-				ItemMeta meta = thrown.getItemMeta();
-				if (meta.getDisplayName().contains(egg)) {
-					event.setCancelled(true);
-				}
-			}
+		if (api.isEgg(thrown)) {
+			event.setCancelled(true);
 		}
 	}
 
@@ -204,6 +199,19 @@ public class PetsEvents implements Listener {
 				}
 			}
 		}
+	}
+
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent event) {
+		ItemStack item = event.getCurrentItem();
+		if (item != null)
+			if (event.getInventory().getType() != InventoryType.PLAYER) {
+				if (api.isEgg(item)) {
+					event.setCancelled(true);
+					((Player) event.getWhoClicked()).updateInventory();
+				}
+			}
 	}
 
 	@EventHandler

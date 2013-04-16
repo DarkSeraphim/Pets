@@ -346,6 +346,19 @@ public class PetsAPI {
 		return false;
 	}
 
+	public boolean isEgg(ItemStack itemstack) {
+		CharSequence egg = ChatColor.GRAY + " - [Baby";
+		if (itemstack.getType() == Material.MONSTER_EGG) {
+			if (itemstack.hasItemMeta()) {
+				ItemMeta meta = itemstack.getItemMeta();
+				if (meta.getDisplayName().contains(egg)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private void doTimer(final Player p) {
 		pet = petlist.get(p.getName());
 		long one = System.currentTimeMillis() + 1000;
